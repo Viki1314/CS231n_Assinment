@@ -54,7 +54,23 @@ def svm_loss_naive(W, X, y, reg):
     # code above to compute the gradient.                                       #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    for i in range(num_train):
+        scores = X[i].dot(W)
+        correct_class_score = scores[y[i]]
+        for j in range(num_classes):
+            if j == y[i]:
+                continue
+            margin = scores[j] - correct_class_score + 1  # note delta = 1
+            if margin > 0:
+                dW[:,y[i]] += -X[i]
+                dW[:,j] += X[i]
 
+    # Right now the loss is a sum over all training examples, but we want it
+    # to be an average instead so we divide by num_train.
+    dW /= num_train
+
+    # Add regularization to the loss.
+    dW += 2*reg *W
     pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -77,7 +93,19 @@ def svm_loss_vectorized(W, X, y, reg):
     # result in loss.                                                           #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    num_classes = W.shape[1]
+    num_train = X.shape[0]
 
+    scores = X.dot(W)
+    scores_correct = scores[np.arange(num_train),y]
+    scores_correct = np.reshape(scores_correct, (num_train, 1))
+    margin= scores-scores_correct+1
+    margin[np.arange(num_train),y] = 0
+    margin[margin<=0] = 0
+
+    loss += margin.sum()
+    loss /= num_train
+    loss += reg*np.sum(W*W)
     pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -92,9 +120,12 @@ def svm_loss_vectorized(W, X, y, reg):
     # loss.                                                                     #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    margin[margin > 0] = 1.0  # max(0, x)  大于0的梯度计为1
+    row_sum = np.sum(margin, axis=1)  # N*1  每个样本累加
+    margin[np.arange(num_train), y] = -row_sum  # 类正确的位置 = -梯度累加,
+    dW += np.dot(X.T, margin) / num_train + 2*reg * W  # D by C
 
     pass
-
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     return loss, dW

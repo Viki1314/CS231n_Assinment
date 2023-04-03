@@ -12,16 +12,7 @@ class LinearClassifier(object):
     def __init__(self):
         self.W = None
 
-    def train(
-        self,
-        X,
-        y,
-        learning_rate=1e-3,
-        reg=1e-5,
-        num_iters=100,
-        batch_size=200,
-        verbose=False,
-    ):
+    def train(self,X,y,learning_rate=1e-3,reg=1e-5,num_iters=100,batch_size=200,verbose=False,):
         """
         Train this linear classifier using stochastic gradient descent.
 
@@ -40,9 +31,7 @@ class LinearClassifier(object):
         A list containing the value of the loss function at each training iteration.
         """
         num_train, dim = X.shape
-        num_classes = (
-            np.max(y) + 1
-        )  # assume y takes values 0...K-1 where K is number of classes
+        num_classes = (np.max(y) + 1)  # assume y takes values 0...K-1 where K is number of classes
         if self.W is None:
             # lazily initialize W
             self.W = 0.001 * np.random.randn(dim, num_classes)
@@ -65,7 +54,10 @@ class LinearClassifier(object):
             # replacement is faster than sampling without replacement.              #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+            indexs = np.random.choice(range(X.shape[0]),batch_size,replace= False)
+            #print(len(indexs))
+            X_batch = X[indexs,:]
+            y_batch = y[indexs]
             pass
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -80,7 +72,7 @@ class LinearClassifier(object):
             # Update the weights using the gradient and the learning rate.          #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+            self.W -= learning_rate*grad
             pass
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -110,7 +102,15 @@ class LinearClassifier(object):
         # Implement this method. Store the predicted labels in y_pred.            #
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        scores = X.dot(self.W)
+        max_scores = np.max(scores,axis=1)
+        ##Use for loop
+        for i in range(X.shape[0]):
+            temp = np.where(scores[i] == max_scores[i])
+            #print(temp)
+            y_pred[i] += temp[0][0]
+            # print(temp[0])
+        ###
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
