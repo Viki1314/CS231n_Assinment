@@ -27,6 +27,11 @@ def affine_forward(x, w, b):
     # will need to reshape the input into rows.                               #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    temp_x = np.reshape(x,(x.shape[0],-1))
+    #b = np.reshape(b,(w.shape[1],-1))
+    out = temp_x.dot(w)
+    #print(out.shape,b.shape)
+    out +=b
 
     pass
 
@@ -60,7 +65,11 @@ def affine_backward(dout, cache):
     # TODO: Implement the affine backward pass.                               #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+    dx = dout.dot(w.T)
+    dx = np.reshape(dx,x.shape)
+    x = np.reshape(x,(x.shape[0],-1))
+    dw = x.T.dot(dout)
+    db = np.sum(dout,axis=0)
     pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -86,6 +95,9 @@ def relu_forward(x):
     # TODO: Implement the ReLU forward pass.                                  #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    out = np.copy(x)
+    out[out<=0] = 0
+    # print(np.where(out<0))
 
     pass
 
@@ -113,6 +125,12 @@ def relu_backward(dout, cache):
     # TODO: Implement the ReLU backward pass.                                 #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    dx = x.copy()
+    dx[dx<=0] = 0
+    index = np.where(dx!=0)
+    # print(index[0])
+    for i in range(len(index[0])):
+        dx[index[0][i],index[1][i]] = dout[index[0][i],index[1][i]]
 
     pass
 
@@ -772,6 +790,24 @@ def svm_loss(x, y):
     # TODO: Copy over your solution from A1.
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    num_train = x.shape[0]
+    num_classes = x.shape[1]
+    scores_correct = x[np.arange(num_train), y]
+    scores_correct = np.reshape(scores_correct, (num_train, 1))
+    margin = x - scores_correct + 1
+    margin[np.arange(num_train), y] = 0
+    margin[margin <= 0] = 0
+
+    loss = margin.sum()
+    loss /= num_train
+    # loss += reg * np.sum(W * W)
+    #
+    margin[margin > 0] = 1.0  # max(0, x)  大于0的梯度计为1
+    row_sum = np.sum(margin, axis=1)  # N*1  每个样本累加
+    margin[np.arange(num_train), y] = -row_sum  # 类正确的位置 = -梯度累加,
+    # dW += np.dot(X.T, margin) / num_train + 2 * reg * W  # D by C
+    dx = margin.copy()
+    dx /= num_train
 
     pass
 
@@ -802,6 +838,26 @@ def softmax_loss(x, y):
     # TODO: Copy over your solution from A1.
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    num_train = x.shape[0]
+    num_classes = x.shape[1]
+    scores = x
+    exp_scores = np.exp(scores)
+
+    correct_exp_scores = exp_scores[np.arange(num_train), y]
+    correct_exp_scores = np.reshape(correct_exp_scores, (num_train, -1))
+    sum_row = np.sum(exp_scores, axis=1)
+    sum_row = np.reshape(sum_row, (num_train, -1))
+    # print(correct_exp_scores.shape,sum_row.shape)
+    loss = np.sum(-np.log(correct_exp_scores / sum_row))
+
+    P = exp_scores / sum_row
+    bias = np.zeros(P.shape)
+
+    bias[np.arange(num_train), y] = 1
+    dx = P - bias
+
+    loss /= num_train
+    dx /= num_train
 
     pass
 
